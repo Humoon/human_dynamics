@@ -161,7 +161,7 @@ def predict_on_tracks(model, img_dir, poseflow_path, output_path, track_id,
     # make dir to save joint rotation mat in json
     import os
     without = output_path.split(os.sep)[:-1]  # without hmmr_output
-    print("without.__len__()=", without.__len__())
+    print("without.__len__()=", without.__len__(), without)
     # if without.__len__() > 1:
     #     print('length>1')
     #     sys.exit(1)
