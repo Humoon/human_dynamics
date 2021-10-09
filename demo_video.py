@@ -161,11 +161,12 @@ def predict_on_tracks(model, img_dir, poseflow_path, output_path, track_id,
     # make dir to save joint rotation mat in json
     import os
     without = output_path.split(os.sep)[:-1]  # without hmmr_output
-    if without.__len__() > 1:
-        print('length>1')
-        sys.exit(1)
-    else:
-        without = without[0]
+    print("without.__len__()=", without.__len__())
+    # if without.__len__() > 1:
+    #     print('length>1')
+    #     sys.exit(1)
+    # else:
+    without = without[0]
     myjson_dir = osp.join(without, 'rot_output')
     myrot_path = osp.join(myjson_dir, 'rot_output.json')
     mykps_path = osp.join(myjson_dir, 'kps_output.json')
