@@ -33,32 +33,28 @@ from src.evaluation.tester import Tester
 from src.util.common import mkdir
 from src.util.smooth_bbox import get_smooth_bbox_params
 
-flags.DEFINE_string(
-    'vid_path', 'penn_action-2278.mp4',
-    'video to run on')
+flags.DEFINE_string('vid_path', 'penn_action-2278.mp4', 'video to run on')
 flags.DEFINE_integer(
     'track_id', 0,
     'PoseFlow generates a track for each detected person. This determines which'
-    ' track index to use if using vid_path.'
-)
+    ' track index to use if using vid_path.')
 flags.DEFINE_string('vid_dir', None, 'If set, runs on all video in directory.')
 flags.DEFINE_string('out_dir', 'demo_output/',
                     'Where to save final HMMR results.')
 flags.DEFINE_string('track_dir', 'demo_output/',
                     'Where to save intermediate tracking results.')
-flags.DEFINE_string('pred_mode', 'pred',
-                    'Which prediction track to use (Only pred supported now).')
+flags.DEFINE_string(
+    'pred_mode', 'pred',
+    'Which prediction track to use (Only pred supported now).')
 flags.DEFINE_string('mesh_color', 'blue', 'Color of mesh.')
 flags.DEFINE_integer(
     'sequence_length', 20,
     'Length of sequence during prediction. Larger will be faster for longer '
-    'videos but use more memory.'
-)
+    'videos but use more memory.')
 flags.DEFINE_boolean(
     'trim', False,
     'If True, trims the first and last couple of frames for which the temporal'
-    'encoder doesn\'t see full fov.'
-)
+    'encoder doesn\'t see full fov.')
 
 
 def get_labels_poseflow(json_path, num_frames, min_kp_count=20):
@@ -81,8 +77,10 @@ def get_labels_poseflow(json_path, num_frames, min_kp_count=20):
         data = json.load(f)
     if len(data.keys()) != num_frames:
         print('Not all frames have people detected in it.')
-        frame_ids = [int(re.findall(r'\d+', img_name)[0])
-                     for img_name in sorted(data.keys())]
+        frame_ids = [
+            int(re.findall(r'\d+', img_name)[0])
+            for img_name in sorted(data.keys())
+        ]
         if frame_ids[0] != 0:
             print('PoseFlow did not find people in the first frame. '
                   'Needs testing.')
@@ -162,7 +160,7 @@ def predict_on_tracks(model, img_dir, poseflow_path, output_path, track_id,
 
     # make dir to save joint rotation mat in json
     import os
-    without = output_path.split(os.sep)[:-1] # without hmmr_output
+    without = output_path.split(os.sep)[:-1]  # without hmmr_output
     if without.__len__() > 1:
         print('length>1')
         sys.exit(1)
@@ -204,8 +202,8 @@ def predict_on_tracks(model, img_dir, poseflow_path, output_path, track_id,
         for j in range(0, mykps.shape[1]):
             _kps = mykps[i][j]
             kpslist = [float(j) for j in _kps]
-            kps_index = 'kps_' +"%02d" % j
-            framedict[kps_index]=kpslist
+            kps_index = 'kps_' + "%02d" % j
+            framedict[kps_index] = kpslist
         totalkpsdict[frame_index] = framedict
     print('Saving kps results to', mykps_path)
     with open(mykps_path, 'w') as jf:
@@ -224,7 +222,7 @@ def predict_on_tracks(model, img_dir, poseflow_path, output_path, track_id,
             rotmat = myposes[i][j]
             rotlist = list(np.reshape(rotmat, (1, -1))[0])
             rotlist = [float(j) for j in rotlist]
-            rot_index = 'rot_'+"%02d" % j
+            rot_index = 'rot_' + "%02d" % j
             framedict[rot_index] = rotlist
         totaldict[frame_index] = framedict
         print('----------')
@@ -240,14 +238,14 @@ def predict_on_tracks(model, img_dir, poseflow_path, output_path, track_id,
     print('Rendering results to {}.'.format(output_path))
     print('----------')
     #preds is short for predict next is to dig out how to render smpl model
-    render_preds(
-        output_path=output_path,
-        config=config,
-        preds=preds,
-        images=images,
-        images_orig=images_orig,
-        trim_length=trim_length,
-    )
+    # render_preds(
+    #     output_path=output_path,
+    #     config=config,
+    #     preds=preds,
+    #     images=images,
+    #     images_orig=images_orig,
+    #     trim_length=trim_length,
+    # )
 
 
 def run_on_video(model, vid_path, trim_length):
@@ -266,14 +264,12 @@ def run_on_video(model, vid_path, trim_length):
     vid_name = osp.basename(vid_path).split('.')[0]
     out_dir = osp.join(config.out_dir, vid_name, 'hmmr_output')
 
-    predict_on_tracks(
-        model=model,
-        img_dir=img_dir,
-        poseflow_path=poseflow_path,
-        output_path=out_dir,
-        track_id=config.track_id,
-        trim_length=trim_length
-    )
+    predict_on_tracks(model=model,
+                      img_dir=img_dir,
+                      poseflow_path=poseflow_path,
+                      output_path=out_dir,
+                      track_id=config.track_id,
+                      trim_length=trim_length)
 
 
 def main(model):
@@ -297,9 +293,7 @@ if __name__ == '__main__':
     print("can print")
     config = get_config()
     # Set up model:
-    model_hmmr = Tester(
-        config,
-        pretrained_resnet_path='models/hmr_noS5.ckpt-642561'
-    )
+    model_hmmr = Tester(config,
+                        pretrained_resnet_path='models/hmr_noS5.ckpt-642561')
 
     main(model_hmmr)
