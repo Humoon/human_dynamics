@@ -18,7 +18,7 @@ def batch_skew(vec, batch_size=None):
 
     returns N x 3 x 3. Skew_sym version of each matrix.
     """
-    with tf.name_scope("batch_skew", [vec]):
+    with tf.name_scope("batch_skew", values=[vec]):
         if batch_size is None:
             batch_size = vec.shape.as_list()[0]
         col_inds = tf.constant([1, 2, 3, 5, 6, 7])
@@ -26,12 +26,11 @@ def batch_skew(vec, batch_size=None):
             tf.reshape(tf.range(0, batch_size) * 9, [-1, 1]) + col_inds,
             [-1, 1])
         updates = tf.reshape(
-            tf.stack(
-                [
-                    -vec[:, 2], vec[:, 1], vec[:, 2], -vec[:, 0], -vec[:, 1],
-                    vec[:, 0]
-                ],
-                axis=1), [-1])
+            tf.stack([
+                -vec[:, 2], vec[:, 1], vec[:, 2], -vec[:, 0], -vec[:, 1],
+                vec[:, 0]
+            ],
+                     axis=1), [-1])
         out_shape = [batch_size * 9]
         res = tf.scatter_nd(indices, updates, out_shape)
         res = tf.reshape(res, [batch_size, 3, 3])
@@ -146,12 +145,12 @@ def batch_global_rigid_transformation(Rs, Js, parent, rotate_base=False):
       new_J : `Tensor`: N x 24 x 3 location of absolute joints
       A     : `Tensor`: N x 24 4 x 4 relative joint transformations for LBS.
     """
-    with tf.name_scope("batch_forward_kinematics", [Rs, Js]):
+    with tf.name_scope("batch_forward_kinematics", values=[Rs, Js]):
         N = Rs.shape[0].value
         if rotate_base:
             print('Flipping the SMPL coordinate frame!!!!')
-            rot_x = tf.constant(
-                [[1, 0, 0], [0, -1, 0], [0, 0, -1]], dtype=Rs.dtype)
+            rot_x = tf.constant([[1, 0, 0], [0, -1, 0], [0, 0, -1]],
+                                dtype=Rs.dtype)
             rot_x = tf.reshape(tf.tile(rot_x, [N, 1]), [N, 3, 3])
             root_rotation = tf.matmul(Rs[:, 0, :, :], rot_x)
         else:
@@ -172,8 +171,9 @@ def batch_global_rigid_transformation(Rs, Js, parent, rotate_base=False):
         for i in range(1, parent.shape[0]):
             j_here = Js[:, i] - Js[:, parent[i]]
             A_here = make_A(Rs[:, i], j_here)
-            res_here = tf.matmul(
-                results[parent[i]], A_here, name="propA%d" % i)
+            res_here = tf.matmul(results[parent[i]],
+                                 A_here,
+                                 name="propA%d" % i)
             results.append(res_here)
 
         # 10 x 24 x 4 x 4

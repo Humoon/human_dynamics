@@ -40,7 +40,8 @@ flags.DEFINE_string('smpl_face_path', SMPL_FACE_PATH,
                     'path to smpl mesh faces (for easy rendering)')
 
 # flags.DEFINE_string('load_path', None, 'path to trained model dir')
-flags.DEFINE_string('load_path', "models/hmmr_model.ckpt-1119816", 'path to trained model dir')
+flags.DEFINE_string('load_path', "models/hmmr_model.ckpt-1119816",
+                    'path to trained model dir')
 flags.DEFINE_integer('batch_size', 8, 'Size of mini-batch.')
 flags.DEFINE_integer('T', 20, 'Length of sequence.')
 flags.DEFINE_integer('num_kps', 25, 'Number of keypoints.')
@@ -49,7 +50,7 @@ flags.DEFINE_list('delta_t_values', ['-5', '5'], 'Amount of time to jump by.')
 
 # For training.
 flags.DEFINE_string('data_dir', None, 'Where tfrecords are saved')
-flags.DEFINE_string('log_dir', 'logs', 'Where to save training models')
+flags.DEFINE_string('logging_dir', 'logs', 'Where to save training models')
 flags.DEFINE_string('model_dir', None,
                     'Where model will be saved -- filled automatically')
 flags.DEFINE_list('datasets', ['h36m', 'penn_action', 'insta_variety'],
@@ -96,21 +97,19 @@ flags.DEFINE_boolean('use_3d_label', True, 'Uses 3D labels if on.')
 flags.DEFINE_boolean('freeze_phi', True, 'Fixes ResNet weights.')
 flags.DEFINE_boolean(
     'use_hmr_ief_init', True,
-    'If True, uses HMR regressor as initialization to HMMR regressor.'
-)
+    'If True, uses HMR regressor as initialization to HMMR regressor.')
 flags.DEFINE_boolean('predict_delta', True,
                      'If True, predicts future and past as well')
 flags.DEFINE_boolean('precomputed_phi', True,
                      'If True, uses tfrecord with precomputed phi')
 flags.DEFINE_boolean(
     'use_delta_from_pred', True,
-    'If True, initializes delta regressor from current prediction.'
-)
+    'If True, initializes delta regressor from current prediction.')
 flags.DEFINE_bool('use_hmr_only', False, 'If true, uses HMR model')
 # Equal split
-flags.DEFINE_bool('split_balanced', True, 'default true, the queue is forced '
-                  'so its half 3D data (H36M) and half 2D in-the-wild data.')
-
+flags.DEFINE_bool(
+    'split_balanced', True, 'default true, the queue is forced '
+    'so its half 3D data (H36M) and half 2D in-the-wild data.')
 
 # Hallucinating
 flags.DEFINE_bool('do_hallucinate', False, 'if true trained hallucinator')
@@ -127,7 +126,6 @@ flags.DEFINE_float('scale_max', 0.3, 'Max value of scale jitter (power of 2)')
 flags.DEFINE_float('delta_scale_max', 0.3, 'Max consecutive scale jitter')
 flags.DEFINE_float('rotate_max', 0, 'Max value to rotate jitter')
 flags.DEFINE_float('delta_rotate_max', 5, 'Max consecutive rotate jitter')
-
 
 # Random seed
 flags.DEFINE_integer('seed', 1, 'Graph-level random seed')
@@ -168,9 +166,8 @@ def prepare_dirs(config, prefix=[]):
         dict_here = config.__dict__
         ignore_keys = ['load_path', 'log_img_step', 'pretrained_model_path']
         diff_keys = [
-            k for k in dict_here
-            if k not in ignore_keys and k in prev_config.keys()
-            and prev_config[k] != dict_here[k]
+            k for k in dict_here if k not in ignore_keys
+            and k in prev_config.keys() and prev_config[k] != dict_here[k]
         ]
 
         for k in diff_keys:
@@ -235,7 +232,6 @@ def prepare_dirs(config, prefix=[]):
             postfix.append('lw-pose{:g}'.format(config.e_lw_pose))
         if config.e_lw_hallucinate != 1:
             postfix.append('lw-hall{:g}'.format(config.e_lw_pose))
-            
 
         if config.d_lr != 1e-4:
             postfix.append('Dlr{:g}' % config.d_lr)
@@ -327,9 +323,9 @@ def prepare_dirs(config, prefix=[]):
         time_str = datetime.now().strftime("%b%d_%H%M")
 
         save_name = "%s_%s_%s" % (prefix, postfix, time_str)
-        config.model_dir = osp.join(config.log_dir, save_name)
+        config.model_dir = osp.join(config.logging_dir, save_name)
 
-    for path in [config.log_dir, config.model_dir]:
+    for path in [config.logging_dir, config.model_dir]:
         if not osp.exists(path):
             print('making %s' % path)
             makedirs(path)

@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import neural_renderer as nr
+# import neural_renderer as nr
 import numpy as np
 import torch
 from torch.autograd import Variable
@@ -21,18 +21,17 @@ from src.util.render.render_utils import (
     draw_text,
 )
 
-
 colors = {
     # colorblind/print/copy safe:
     'blue': [0.65098039, 0.74117647, 0.85882353],
     'pink': [.9, .7, .7],
-    'mint': [ 166/255.,  229/255.,  204/255.],
-    'mint2': [ 202/255.,  229/255.,  223/255.],
-    'green': [ 153/255.,  216/255.,  201/255.],
-    'green2': [ 171/255.,  221/255.,  164/255.],
-    'red': [ 251/255.,  128/255.,  114/255.],
-    'orange': [ 253/255.,  174/255.,  97/255.],
-    'yellow': [ 250/255.,  230/255.,  154/255.]
+    'mint': [166 / 255., 229 / 255., 204 / 255.],
+    'mint2': [202 / 255., 229 / 255., 223 / 255.],
+    'green': [153 / 255., 216 / 255., 201 / 255.],
+    'green2': [171 / 255., 221 / 255., 164 / 255.],
+    'red': [251 / 255., 128 / 255., 114 / 255.],
+    'orange': [253 / 255., 174 / 255., 97 / 255.],
+    'yellow': [250 / 255., 230 / 255., 154 / 255.]
 }
 
 
@@ -48,14 +47,14 @@ class VisRenderer(object):
     This class assumes all inputs are Torch/numpy variables.
     This renderer expects quarternion rotation for camera,,
     """
-
     def __init__(self,
                  img_size=256,
                  face_path='src/tf_smpl/smpl_faces.npy',
                  t_size=1):
 
-        self.renderer = nr.Renderer(
-            img_size, camera_mode='look_at', perspective=False)
+        self.renderer = nr.Renderer(img_size,
+                                    camera_mode='look_at',
+                                    perspective=False)
         self.set_light_dir([1, .5, -1], int_dir=0.3, int_amb=0.7)
         self.set_bgcolor([1, 1, 1.])
         self.img_size = img_size
@@ -66,8 +65,8 @@ class VisRenderer(object):
             self.faces = torch.unsqueeze(self.faces, 0)
 
         # Default color:
-        default_tex = np.ones((1, self.faces.shape[1], t_size, t_size, t_size,
-                               3))
+        default_tex = np.ones(
+            (1, self.faces.shape[1], t_size, t_size, t_size, 3))
         self.default_tex = to_variable(torch.FloatTensor(default_tex).cuda())
 
         # Default camera:
@@ -168,7 +167,7 @@ class VisRenderer(object):
                 return (img * (1 - mask) + rend * mask).astype(np.uint8)
             else:
                 # TODO: Temporary hack
-                mask = mask.reshape((rend.shape[:2]) + (1,))
+                mask = mask.reshape((rend.shape[:2]) + (1, ))
                 return self.make_alpha(rend, mask)
         else:
             return rend.astype(np.uint8)
@@ -215,14 +214,12 @@ class VisRenderer(object):
         new_verts = torch.matmul(new_rot, centered_v.permute(0, 2, 1))
         new_verts = new_verts.permute(0, 2, 1) + center
 
-        return self.__call__(
-            new_verts,
-            cam=cam,
-            texture=texture,
-            rend_mask=rend_mask,
-            alpha=alpha,
-            color_name=color_name
-        )
+        return self.__call__(new_verts,
+                             cam=cam,
+                             texture=texture,
+                             rend_mask=rend_mask,
+                             alpha=alpha,
+                             color_name=color_name)
 
     def make_alpha(self, rend, mask):
         rend = rend.astype(np.uint8)
@@ -312,15 +309,20 @@ def visualize_img(img,
     skel_img = draw_skeleton(input_img, pred_joint)
     if kp_gt is not None:
         gt_joint = ((kp_gt[:, :2] + 1) * 0.5) * img_size
-        skel_img = draw_skeleton(
-            skel_img, gt_joint, draw_edges=False, vis=gt_vis)
+        skel_img = draw_skeleton(skel_img,
+                                 gt_joint,
+                                 draw_edges=False,
+                                 vis=gt_vis)
 
     if pad_vals is not None:
         skel_img = remove_pads(skel_img, pad_vals)
         rend_img = remove_pads(rend_img, pad_vals)
     if rotated_view:
-        rot_img = renderer.rotated(
-            vert, 90, cam=cam, alpha=False, color_name=mesh_color)
+        rot_img = renderer.rotated(vert,
+                                   90,
+                                   cam=cam,
+                                   alpha=False,
+                                   color_name=mesh_color)
         if pad_vals is not None:
             rot_img = remove_pads(rot_img, pad_vals)
 
@@ -330,10 +332,21 @@ def visualize_img(img,
         return skel_img / 255, rend_img / 255
 
 
-def visualize_img_orig(cam, kp_pred, vert, renderer, start_pt, scale,
-                       proc_img_shape, im_path=None, img=None,
-                       rotated_view=False, mesh_color='blue', max_img_size=300,
-                       no_text=False, bbox=None, crop_cam=None):
+def visualize_img_orig(cam,
+                       kp_pred,
+                       vert,
+                       renderer,
+                       start_pt,
+                       scale,
+                       proc_img_shape,
+                       im_path=None,
+                       img=None,
+                       rotated_view=False,
+                       mesh_color='blue',
+                       max_img_size=300,
+                       no_text=False,
+                       bbox=None,
+                       crop_cam=None):
     """
     Visualizes the image with the ground truth keypoints and predicted keypoints
     in the original image space (squared).
@@ -363,7 +376,7 @@ def visualize_img_orig(cam, kp_pred, vert, renderer, start_pt, scale,
         undo_scale = 1. / np.array(scale)
 
     if bbox is not None:
-        assert(crop_cam is not None)
+        assert (crop_cam is not None)
         img = img[bbox[0]:bbox[1], bbox[2]:bbox[3]]
         # For these, the cameras are already adjusted.
         start_pt = np.array([0, 0])
@@ -386,8 +399,8 @@ def visualize_img_orig(cam, kp_pred, vert, renderer, start_pt, scale,
     else:
 
         # This is camera in crop image coord.
-        cam_crop = np.hstack([proc_img_shape[0] * cam[0] * 0.5,
-                              cam[1:] + (2./cam[0]) * 0.5])
+        cam_crop = np.hstack(
+            [proc_img_shape[0] * cam[0] * 0.5, cam[1:] + (2. / cam[0]) * 0.5])
 
         # This is camera in orig image coord
         cam_orig = np.hstack([
@@ -398,7 +411,7 @@ def visualize_img_orig(cam, kp_pred, vert, renderer, start_pt, scale,
         # This is the camera in normalized orig_image coord
         new_cam = np.hstack([
             cam_orig[0] * (2. / img_size),
-            cam_orig[1:] - (1 / ((2./img_size) * cam_orig[0]))
+            cam_orig[1:] - (1 / ((2. / img_size) * cam_orig[0]))
         ])
         new_cam = new_cam.astype(np.float32)
         use_cam = new_cam
@@ -419,9 +432,20 @@ def visualize_img_orig(cam, kp_pred, vert, renderer, start_pt, scale,
     return rendered_orig
 
 
-def visualize_mesh_og(cam, vert, renderer, start_pt, scale, proc_img_shape,
-                      im_path=None, img=None, deg=0, mesh_color='blue',
-                      max_img_size=300, pad=50, crop_cam=None, bbox=None):
+def visualize_mesh_og(cam,
+                      vert,
+                      renderer,
+                      start_pt,
+                      scale,
+                      proc_img_shape,
+                      im_path=None,
+                      img=None,
+                      deg=0,
+                      mesh_color='blue',
+                      max_img_size=300,
+                      pad=50,
+                      crop_cam=None,
+                      bbox=None):
     """
     Visualize mesh in original image space.
 
@@ -438,7 +462,7 @@ def visualize_mesh_og(cam, vert, renderer, start_pt, scale, proc_img_shape,
         img = ((img / 255.) - 0.5) * 2
 
     if bbox is not None:
-        assert(crop_cam is not None)
+        assert (crop_cam is not None)
         img = img[bbox[0]:bbox[1], bbox[2]:bbox[3]]
         # For these, the cameras are already adjusted.
         scale = 1.
@@ -464,8 +488,8 @@ def visualize_mesh_og(cam, vert, renderer, start_pt, scale, proc_img_shape,
         )
     else:
         # This is camera in crop image coord.
-        cam_crop = np.hstack([proc_img_shape[0] * cam[0] * 0.5,
-                              cam[1:] + (2./cam[0]) * 0.5])
+        cam_crop = np.hstack(
+            [proc_img_shape[0] * cam[0] * 0.5, cam[1:] + (2. / cam[0]) * 0.5])
 
         # This is camera in orig image coord
         cam_orig = np.hstack([
@@ -476,7 +500,7 @@ def visualize_mesh_og(cam, vert, renderer, start_pt, scale, proc_img_shape,
         # This is the camera in normalized orig_image coord
         new_cam = np.hstack([
             cam_orig[0] * (2. / img_size),
-            cam_orig[1:] - (1 / ((2./img_size) * cam_orig[0]))
+            cam_orig[1:] - (1 / ((2. / img_size) * cam_orig[0]))
         ])
         new_cam = new_cam.astype(np.float32)
 
@@ -495,11 +519,9 @@ def make_square(img):
     img_size = np.max(img.shape[:2])
     pad_vals = img_size - img.shape[:2]
 
-    img = np.pad(
-        array=img,
-        pad_width=((0, pad_vals[0]), (0, pad_vals[1]), (0, 0)),
-        mode='constant'
-    )
+    img = np.pad(array=img,
+                 pad_width=((0, pad_vals[0]), (0, pad_vals[1]), (0, 0)),
+                 mode='constant')
 
     return img, pad_vals
 
@@ -560,8 +582,8 @@ def compute_video_bbox(cams, kps, proc_infos, margin=10):
         # in normalize coord of the original image:
         # kp_orig = 2 * (pred_joint_orig / img_size) - 1
         # This is camera in crop image coord (224x224).
-        cam_crop = np.hstack([im_shape * cam[0] * 0.5,
-                              cam[1:] + (2./cam[0]) * 0.5])
+        cam_crop = np.hstack(
+            [im_shape * cam[0] * 0.5, cam[1:] + (2. / cam[0]) * 0.5])
         # This is camera in orig image coord
         cam_orig = np.hstack([
             cam_crop[0] * undo_scale,
@@ -570,7 +592,7 @@ def compute_video_bbox(cams, kps, proc_infos, margin=10):
         # This is the camera in normalized orig_image coord
         new_cam = np.hstack([
             cam_orig[0] * (2. / img_size),
-            cam_orig[1:] - (1 / ((2./img_size) * cam_orig[0]))
+            cam_orig[1:] - (1 / ((2. / img_size) * cam_orig[0]))
         ])
         new_cams.append(new_cam.astype(np.float32))
         x = pred_joint_orig[:, 0]
@@ -612,11 +634,12 @@ def compute_video_bbox(cams, kps, proc_infos, margin=10):
 
         if np.linalg.norm(proc_info['start_pt']) < new_offset_norm:
             print('crop is more than start pt..?')
-            import ipdb; ipdb.set_trace()
+            import ipdb
+            ipdb.set_trace()
 
         # This is camera in crop image coord (224x224).
-        cam_crop = np.hstack([im_shape * cam[0] * 0.5,
-                              cam[1:] + (2./cam[0]) * 0.5])
+        cam_crop = np.hstack(
+            [im_shape * cam[0] * 0.5, cam[1:] + (2. / cam[0]) * 0.5])
 
         # This is camera in orig image coord
         cam_orig = np.hstack([
@@ -627,7 +650,7 @@ def compute_video_bbox(cams, kps, proc_infos, margin=10):
         # This is the camera in normalized orig_image coord
         new_cam = np.hstack([
             cam_orig[0] * (2. / img_size_crop),
-            cam_orig[1:] - (1 / ((2./img_size_crop) * cam_orig[0]))
+            cam_orig[1:] - (1 / ((2. / img_size_crop) * cam_orig[0]))
         ])
         new_cams_cropped.append(new_cam.astype(np.float32))
 

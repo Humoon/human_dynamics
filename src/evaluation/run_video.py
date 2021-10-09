@@ -13,18 +13,22 @@ from skimage.io import imread
 from tqdm import tqdm
 
 from src.util.render.nmr_renderer import (
-    VisRenderer,
     visualize_img,
     visualize_img_orig,
 )
+# VisRenderer,
 from src.util.common import resize_img
 from src.util.smooth_bbox import get_smooth_bbox_params
-
 
 IMG_SIZE = 224
 
 
-def process_video(model, config, im_paths, kps, pred_dir, min_frame=0,
+def process_video(model,
+                  config,
+                  im_paths,
+                  kps,
+                  pred_dir,
+                  min_frame=0,
                   max_frame=None):
     bbox_params_smooth, s, e = get_smooth_bbox_params(kps, vis_thresh=0.1)
     min_f = max(s, min_frame)
@@ -75,11 +79,9 @@ def process_image(im_path, bbox_param):
     center_scaled = np.round(center * scale_factors).astype(np.int)
 
     # Make sure there is enough space to crop 224x224.
-    image_padded = np.pad(
-        array=image_scaled,
-        pad_width=((IMG_SIZE,), (IMG_SIZE,), (0,)),
-        mode='edge'
-    )
+    image_padded = np.pad(array=image_scaled,
+                          pad_width=((IMG_SIZE, ), (IMG_SIZE, ), (0, )),
+                          mode='edge')
     height, width = image_padded.shape[:2]
     center_scaled += IMG_SIZE
 
@@ -107,7 +109,12 @@ def process_image(im_path, bbox_param):
     }
 
 
-def render_preds(output_path, config, preds, images, images_orig, trim_length,
+def render_preds(output_path,
+                 config,
+                 preds,
+                 images,
+                 images_orig,
+                 trim_length,
                  img_size=224):
     """
     Renders a 2x2 video:
@@ -185,10 +192,8 @@ def render_preds(output_path, config, preds, images, images_orig, trim_length,
             rot_og = np.hstack((rot_og, padding))
         else:
             render_og = np.hstack((render_og, padding))
-        rendered_crop = np.hstack((
-            np.vstack((rend_crop, skel_crop)),
-            np.vstack((render_og, rot_og))
-        ))
+        rendered_crop = np.hstack((np.vstack(
+            (rend_crop, skel_crop)), np.vstack((render_og, rot_og))))
 
         plt.imsave(
             fname=os.path.join(output_crop,
@@ -203,32 +208,39 @@ def render_preds(output_path, config, preds, images, images_orig, trim_length,
 
 
 def make_video(output_path, img_dir, fps=25):
-        """
+    """
         output_path is the final mp4 name
         img_dir is where the images to make into video are saved.
         """
-        cmd = [
-            'ffmpeg',
-            '-y',
-            '-threads', '16',
-            '-framerate', str(fps),
-            '-i', '{img_dir}/frame%06d.png'.format(img_dir=img_dir),
-            '-profile:v', 'baseline',
-            '-level', '3.0',
-            '-c:v', 'libx264',
-            '-pix_fmt', 'yuv420p',
-            '-an',
-            # Note that if called as a string, ffmpeg needs quotes around the
-            # scale invocation.
-            '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
-            output_path,
-        ]
-        print(' '.join(cmd))
-        try:
-            err = subprocess.call(cmd)
-            if err:
-                ipdb.set_trace()
-        except OSError:
+    cmd = [
+        'ffmpeg',
+        '-y',
+        '-threads',
+        '16',
+        '-framerate',
+        str(fps),
+        '-i',
+        '{img_dir}/frame%06d.png'.format(img_dir=img_dir),
+        '-profile:v',
+        'baseline',
+        '-level',
+        '3.0',
+        '-c:v',
+        'libx264',
+        '-pix_fmt',
+        'yuv420p',
+        '-an',
+        # Note that if called as a string, ffmpeg needs quotes around the
+        # scale invocation.
+        '-vf',
+        'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+        output_path,
+    ]
+    print(' '.join(cmd))
+    try:
+        err = subprocess.call(cmd)
+        if err:
             ipdb.set_trace()
-            print('OSError')
-
+    except OSError:
+        ipdb.set_trace()
+        print('OSError')

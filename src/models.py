@@ -4,8 +4,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.contrib.layers.python.layers.initializers import (
-    variance_scaling_initializer,
-)
+    variance_scaling_initializer, )
 import tensorflow.contrib.slim as slim
 
 
@@ -13,9 +12,7 @@ def get_image_encoder(model_type='resnet'):
     """
     Retrieves encoder fn for image and 3D
     """
-    models = {
-        'resnet': encoder_resnet
-    }
+    models = {'resnet': encoder_resnet}
     if model_type in models.keys():
         return models[model_type]
     else:
@@ -47,6 +44,7 @@ def get_temporal_encoder(model_type='AZ_FC2GN'):
 
 # Functions for image encoder.
 
+
 def encoder_resnet(x, is_training=True, weight_decay=0.001, reuse=False):
     """
     Resnet v2-50
@@ -63,15 +61,14 @@ def encoder_resnet(x, is_training=True, weight_decay=0.001, reuse=False):
     - variables: tf variables
     """
     from tensorflow.contrib.slim.python.slim.nets import resnet_v2
-    with tf.name_scope('Encoder_resnet', [x]):
+    with tf.name_scope("Encoder_resnet", values=[x]):
         with slim.arg_scope(
                 resnet_v2.resnet_arg_scope(weight_decay=weight_decay)):
-            net, end_points = resnet_v2.resnet_v2_50(
-                x,
-                num_classes=None,
-                is_training=is_training,
-                reuse=reuse,
-                scope='resnet_v2_50')
+            net, end_points = resnet_v2.resnet_v2_50(x,
+                                                     num_classes=None,
+                                                     is_training=is_training,
+                                                     reuse=reuse,
+                                                     scope='resnet_v2_50')
             net = tf.squeeze(net, axis=[1, 2])
     variables_scope = 'resnet_v2_50'
     return net, variables_scope
@@ -103,20 +100,21 @@ def encoder_fc3_dropout(x,
         net = slim.dropout(net, 0.5, is_training=is_training, scope='dropout1')
         net = slim.fully_connected(net, 1024, scope='fc2')
         net = slim.dropout(net, 0.5, is_training=is_training, scope='dropout2')
-        small_xavier = variance_scaling_initializer(
-            factor=.01, mode='FAN_AVG', uniform=True)
-        net = slim.fully_connected(
-            net,
-            num_output,
-            activation_fn=None,
-            weights_initializer=small_xavier,
-            scope='fc3')
+        small_xavier = variance_scaling_initializer(factor=.01,
+                                                    mode='FAN_AVG',
+                                                    uniform=True)
+        net = slim.fully_connected(net,
+                                   num_output,
+                                   activation_fn=None,
+                                   weights_initializer=small_xavier,
+                                   scope='fc3')
 
     variables = tf.contrib.framework.get_variables(scope)
     return net, variables
 
 
 # Functions for f_{movie strip}.
+
 
 def az_fc2_groupnorm(is_training, net, num_conv_layers):
     """
@@ -141,8 +139,12 @@ def az_fc2_groupnorm(is_training, net, num_conv_layers):
     return net
 
 
-def az_fc_block2(net_input, num_filter, kernel_width, is_training,
-                 use_groupnorm=False, name=None):
+def az_fc_block2(net_input,
+                 num_filter,
+                 kernel_width,
+                 is_training,
+                 use_groupnorm=False,
+                 name=None):
     """
     Full convolutions not separable!!
     same as az_fc_block, but residual connections is proper Kaiming style
@@ -203,8 +205,9 @@ def az_fc_block2(net_input, num_filter, kernel_width, is_training,
     # relu
     net_relu2 = tf.nn.relu(net_norm2)
     # weight
-    small_xavier = variance_scaling_initializer(
-        factor=.001, mode='FAN_AVG', uniform=True)
+    small_xavier = variance_scaling_initializer(factor=.001,
+                                                mode='FAN_AVG',
+                                                uniform=True)
 
     net_final = tf.contrib.layers.conv2d(
         inputs=net_relu2,
@@ -230,9 +233,17 @@ def az_fc_block2(net_input, num_filter, kernel_width, is_training,
 
 # Functions for f_3D.
 
-def batch_pred_omega(input_features, batch_size, is_training, num_output,
-                     omega_mean, sequence_length, scope, predict_delta_keys=(),
-                     use_delta_from_pred=False, use_optcam=False):
+
+def batch_pred_omega(input_features,
+                     batch_size,
+                     is_training,
+                     num_output,
+                     omega_mean,
+                     sequence_length,
+                     scope,
+                     predict_delta_keys=(),
+                     use_delta_from_pred=False,
+                     use_optcam=False):
     """
     Given B x T x * inputs, computes IEF on them by batching them
     as BT x *.
@@ -254,16 +265,12 @@ def batch_pred_omega(input_features, batch_size, is_training, num_output,
         use_delta_from_pred=use_delta_from_pred,
         use_optcam=use_optcam,
     )
-    omega_pred = tf.reshape(
-        omega_pred,
-        (batch_size, sequence_length, num_output)
-    )
+    omega_pred = tf.reshape(omega_pred,
+                            (batch_size, sequence_length, num_output))
     new_delta_predictions = {}
     for delta_t, prediction in delta_predictions.items():
         new_delta_predictions[delta_t] = tf.reshape(
-            prediction,
-            (batch_size, sequence_length, num_output)
-        )
+            prediction, (batch_size, sequence_length, num_output))
     return omega_pred, new_delta_predictions
 
 
@@ -283,22 +290,27 @@ def fc2_res(phi, name='fc2_res'):
     with tf.variable_scope(name, reuse=False):
         net = slim.fully_connected(phi, 2048, scope='fc1')
         net = slim.fully_connected(net, 2048, scope='fc2')
-        small_xavier = variance_scaling_initializer(
-            factor=.001, mode='FAN_AVG', uniform=True)
-        net_final = slim.fully_connected(
-            net,
-            2048,
-            activation_fn=None,
-            weights_initializer=small_xavier,
-            scope='fc3'
-        )
+        small_xavier = variance_scaling_initializer(factor=.001,
+                                                    mode='FAN_AVG',
+                                                    uniform=True)
+        net_final = slim.fully_connected(net,
+                                         2048,
+                                         activation_fn=None,
+                                         weights_initializer=small_xavier,
+                                         scope='fc3')
         new_phi = net_final + phi
     return new_phi
 
 
-def call_hmr_ief(phi, omega_start, scope, num_output=85, num_stage=3,
-                 is_training=True, predict_delta_keys=(),
-                 use_delta_from_pred=False, use_optcam=True):
+def call_hmr_ief(phi,
+                 omega_start,
+                 scope,
+                 num_output=85,
+                 num_stage=3,
+                 is_training=True,
+                 predict_delta_keys=(),
+                 use_delta_from_pred=False,
+                 use_optcam=True):
     """
     Wrapper for doing HMR-style IEF.
 
@@ -321,14 +333,12 @@ def call_hmr_ief(phi, omega_start, scope, num_output=85, num_stage=3,
         Final theta (Bx{num_output})
         Deltas predictions (List of outputs)
     """
-    theta_here = hmr_ief(
-        phi=phi,
-        omega_start=omega_start,
-        scope=scope,
-        num_output=num_output,
-        num_stage=num_stage,
-        is_training=is_training
-    )
+    theta_here = hmr_ief(phi=phi,
+                         omega_start=omega_start,
+                         scope=scope,
+                         num_output=num_output,
+                         num_stage=num_stage,
+                         is_training=is_training)
 
     # Delta only needs to do cam/pose, no shape!
     if use_optcam:
@@ -356,14 +366,12 @@ def call_hmr_ief(phi, omega_start, scope, num_output=85, num_stage=3,
         else:
             omega_start_delta = omega_start_delta[:, :num_output_delta]
 
-        delta_pred = hmr_ief(
-            phi=phi,
-            omega_start=omega_start_delta,
-            scope=scope_delta,
-            num_output=num_output_delta,
-            num_stage=num_stage,
-            is_training=is_training
-        )
+        delta_pred = hmr_ief(phi=phi,
+                             omega_start=omega_start_delta,
+                             scope=scope_delta,
+                             num_output=num_output_delta,
+                             num_stage=num_stage,
+                             is_training=is_training)
         if use_optcam:
             # Add camera + shape
             scale = tf.ones([delta_pred.shape[0], 1])
@@ -377,7 +385,11 @@ def call_hmr_ief(phi, omega_start, scope, num_output=85, num_stage=3,
     return theta_here, deltas_predictions
 
 
-def hmr_ief(phi, omega_start, scope, num_output=85, num_stage=3,
+def hmr_ief(phi,
+            omega_start,
+            scope,
+            num_output=85,
+            num_stage=3,
             is_training=True):
     """
     Runs HMR-style IEF.
@@ -400,12 +412,10 @@ def hmr_ief(phi, omega_start, scope, num_output=85, num_stage=3,
         for _ in range(num_stage):
             # ---- Compute outputs
             state = tf.concat([phi, theta_prev], 1)
-            delta_theta, _ = encoder_fc3_dropout(
-                state,
-                is_training=is_training,
-                num_output=num_output,
-                reuse=tf.AUTO_REUSE
-            )
+            delta_theta, _ = encoder_fc3_dropout(state,
+                                                 is_training=is_training,
+                                                 num_output=num_output,
+                                                 reuse=tf.AUTO_REUSE)
             # Compute new theta
             theta_here = theta_prev + delta_theta
 
