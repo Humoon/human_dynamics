@@ -22,18 +22,33 @@ Modules included:
 '''
 
 import chumpy
-from hmr.smpl_webuser import lbs
-from hmr.smpl_webuser.posemapper import posemap
+from src.smpl_webuser import lbs
+from src.smpl_webuser.posemapper import posemap
 import scipy.sparse as sp
 from chumpy.ch import MatVecMult
 
-def ischumpy(x): return hasattr(x, 'dterms')
 
-def verts_decorated(trans, pose, 
-    v_template, J, weights, kintree_table, bs_style, f,
-    bs_type=None, posedirs=None, betas=None, shapedirs=None, want_Jtr=False):
+def ischumpy(x):
+    return hasattr(x, 'dterms')
 
-    for which in [trans, pose, v_template, weights, posedirs, betas, shapedirs]:
+
+def verts_decorated(trans,
+                    pose,
+                    v_template,
+                    J,
+                    weights,
+                    kintree_table,
+                    bs_style,
+                    f,
+                    bs_type=None,
+                    posedirs=None,
+                    betas=None,
+                    shapedirs=None,
+                    want_Jtr=False):
+
+    for which in [
+            trans, pose, v_template, weights, posedirs, betas, shapedirs
+    ]:
         if which is not None:
             assert ischumpy(which)
 
@@ -45,27 +60,33 @@ def verts_decorated(trans, pose,
         v_shaped = v + shapedirs.dot(betas)
     else:
         v_shaped = v
-        
+
     if posedirs is not None:
         v_posed = v_shaped + posedirs.dot(posemap(bs_type)(pose))
     else:
         v_posed = v_shaped
-        
+
     v = v_posed
-        
+
     if sp.issparse(J):
         regressor = J
-        J_tmpx = MatVecMult(regressor, v_shaped[:,0])        
-        J_tmpy = MatVecMult(regressor, v_shaped[:,1])        
-        J_tmpz = MatVecMult(regressor, v_shaped[:,2])        
-        J = chumpy.vstack((J_tmpx, J_tmpy, J_tmpz)).T            
-    else:    
-        assert(ischumpy(J))
-        
-    assert(bs_style=='lbs')
-    result, Jtr = lbs.verts_core(pose, v, J, weights, kintree_table, want_Jtr=True, xp=chumpy)
-     
-    tr = trans.reshape((1,3))
+        J_tmpx = MatVecMult(regressor, v_shaped[:, 0])
+        J_tmpy = MatVecMult(regressor, v_shaped[:, 1])
+        J_tmpz = MatVecMult(regressor, v_shaped[:, 2])
+        J = chumpy.vstack((J_tmpx, J_tmpy, J_tmpz)).T
+    else:
+        assert (ischumpy(J))
+
+    assert (bs_style == 'lbs')
+    result, Jtr = lbs.verts_core(pose,
+                                 v,
+                                 J,
+                                 weights,
+                                 kintree_table,
+                                 want_Jtr=True,
+                                 xp=chumpy)
+
+    tr = trans.reshape((1, 3))
     result = result + tr
     Jtr = Jtr + tr
 
@@ -77,7 +98,7 @@ def verts_decorated(trans, pose,
     result.weights = weights
     result.kintree_table = kintree_table
     result.bs_style = bs_style
-    result.bs_type =bs_type
+    result.bs_type = bs_type
     if posedirs is not None:
         result.posedirs = posedirs
         result.v_posed = v_posed
@@ -89,15 +110,23 @@ def verts_decorated(trans, pose,
         result.J_transformed = Jtr
     return result
 
-def verts_core(pose, v, J, weights, kintree_table, bs_style, want_Jtr=False, xp=chumpy):
-    
+
+def verts_core(pose,
+               v,
+               J,
+               weights,
+               kintree_table,
+               bs_style,
+               want_Jtr=False,
+               xp=chumpy):
+
     if xp == chumpy:
-        assert(hasattr(pose, 'dterms'))
-        assert(hasattr(v, 'dterms'))
-        assert(hasattr(J, 'dterms'))
-        assert(hasattr(weights, 'dterms'))
-     
-    assert(bs_style=='lbs')
+        assert (hasattr(pose, 'dterms'))
+        assert (hasattr(v, 'dterms'))
+        assert (hasattr(J, 'dterms'))
+        assert (hasattr(weights, 'dterms'))
+
+    assert (bs_style == 'lbs')
     result = lbs.verts_core(pose, v, J, weights, kintree_table, want_Jtr, xp)
 
     return result

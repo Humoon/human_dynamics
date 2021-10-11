@@ -26,8 +26,8 @@ import numpy as np
 import pickle
 import chumpy as ch
 from chumpy.ch import MatVecMult
-from hmr.smpl_webuser.posemapper import posemap
-from hmr.smpl_webuser.verts import verts_core
+from src.smpl_webuser.posemapper import posemap
+from src.smpl_webuser.verts import verts_core
 
 
 def save_model(model, fname):
